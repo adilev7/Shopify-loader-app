@@ -1,0 +1,46 @@
+.gifWrap {
+  width: 80%;
+  margin: 0 auto;
+}
+.gifWrapWrap {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: left;
+  align-items: center;
+  gap: 3em 5em;
+  width: 100%;
+  margin: 2.5em 0 2.5em 2.7em;
+}
+.gifWrapWrap > * {
+  min-width: 115px;
+  max-width: 115px;
+  width: 25%;
+}
+.gifWrapWrap > * > .Polaris-Thumbnail {
+  width: 100%;
+  padding: 0.1em;
+  box-shadow: 2px 2px 6px #ddd;
+  cursor: pointer;
+  user-select: none;
+  border: initial;
+  transition: all 0.2s ease-in-out;
+}
+.gifWrapWrap > * > .Polaris-Thumbnail:hover {
+  padding: initial;
+  box-shadow: -2px -2px 2px #ddd;
+}
+.gifWrapWrap > .is-chosen {
+  position: relative;
+  box-shadow: 0 0 0 4px rgba(0, 110, 255, 0.7);
+  transition: all 0.05s ease-in-out;
+}
+.gifWrapWrap > .is-chosen > .Polaris-Thumbnail {
+  box-shadow: initial;
+  border-radius: initial;
+  padding: initial;
+}
+
+.dropZoneWrap .Polaris-DropZone {
+  margin-top: 2em;
+  margin-bottom: 2em;
+}
