@@ -9,18 +9,20 @@ const gifControl = require("../controllers/gif");
 //      shop: String
 //   }
 
-router.get("Get all gifs", "/", async (ctx) => {
+// router.get("Get all gifs", "/", async (ctx) => {
+//   try {
+//     const gifs = await gifControl.getAllGifs();
+//     ctx.body = gifs;
+//   } catch (err) {
+//     console.log(err);
+//     ctx.body = "Failed to update database";
+//   }
+// });
+router.get("Get gif", "/", async (ctx) => {
+  console.log({ "gif route": ctx.query.shop });
   try {
-    const gifs = await gifControl.getAllGifs();
-    ctx.body = gifs;
-  } catch (err) {
-    console.log(err);
-    ctx.body = "Failed to update database";
-  }
-});
-router.get("Get gif", "/:id", async (ctx) => {
-  try {
-    const gif = await gifControl.getGif(ctx.params.id);
+    const gif = await gifControl.getShopGifs(ctx.query.shop);
+    console.log({ gif });
     ctx.body = gif;
   } catch (err) {
     console.log(err);
@@ -29,7 +31,7 @@ router.get("Get gif", "/:id", async (ctx) => {
 });
 router.post("Create gif", "/", async (ctx) => {
   try {
-    const gif = await gifControl.createGif(ctx.request.body);
+    const gif = await gifControl.createGif(ctx.body);
     ctx.body = gif;
   } catch (err) {
     console.log(err);

@@ -10,39 +10,51 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheckCircle } from "@fortawesome/free-solid-svg-icons";
 import { useState, useCallback, useEffect } from "react";
+import gifService from "./services/gifService";
 
-const Index = () => {
+const Index = ({ shop }) => {
+  console.log({ Index: shop });
   const [loaders, setLoaders] = useState([
     {
-      id: 0,
-      loader: require("../images/loader.gif").default,
+      _id: 0,
+      file: require("../images/loader.gif").default,
       chosen: true,
     },
     {
-      id: 1,
-      loader: require("../images/loader-yellow.gif").default,
+      _id: 1,
+      file: require("../images/loader-yellow.gif").default,
       chosen: false,
     },
     {
-      id: 2,
-      loader: require("../images/loader.gif").default,
+      _id: 2,
+      file: require("../images/loader.gif").default,
       chosen: false,
     },
     {
-      id: 3,
-      loader: require("../images/loader-yellow.gif").default,
+      _id: 3,
+      file: require("../images/loader-yellow.gif").default,
       chosen: false,
     },
   ]);
+
+  useEffect(() => {
+    const getGifs = async () => {
+      const { data: shopGifs } = await gifService.getShopGifs(shop);
+      shopGifs && setLoaders((loaders) => [...loaders, ...shopGifs]);
+      console.log({ shopGifs });
+    };
+    getGifs();
+  }, []);
+
   // const [files, setFiles] = useState([]);
   // const [chosen, setChosen] = useState({});
   const [rejectedFiles, setRejectedFiles] = useState([]);
   const hasError = rejectedFiles.length > 0;
 
-  const handleChosen = ({ id }) => {
+  const handleChosen = ({ _id: chosenId }) => {
     setLoaders((loaders) =>
       loaders.map((loader) => {
-        if (loader.id === id) {
+        if (loader._id === chosenId) {
           return { ...loader, chosen: true };
         }
 
@@ -54,8 +66,8 @@ const Index = () => {
   const handleNew = (acceptedFiles) => {
     if (acceptedFiles.length) {
       const newLoader = {
-        id: loaders.length,
-        loader: window.URL.createObjectURL(...acceptedFiles),
+        _id: loaders.length,
+        file: window.URL.createObjectURL(...acceptedFiles),
         chosen: true,
       };
 
@@ -76,7 +88,6 @@ const Index = () => {
     []
   );
 
-  console.log(loaders);
   // const fileUpload = !files.length && <DropZone.FileUpload />;
   // const uploadedFiles = files.length > 0 && (
   //   <>
@@ -124,12 +135,13 @@ const Index = () => {
       <div className="gifWrap">
         <div className="gifWrapWrap">
           {loaders.length &&
-            loaders.map((loader) => {
+            loaders.map((loader, index) => {
+              console.log(index);
               return (
                 <div
                   onClick={() => handleChosen(loader)}
                   className={loader.chosen ? "is-chosen" : ""}
-                  key={loader.id}
+                  key={loader._id}
                 >
                   {loader.chosen && (
                     <FontAwesomeIcon
@@ -147,8 +159,8 @@ const Index = () => {
                     />
                   )}
                   <Thumbnail
-                    alt={"loader" + loader.id}
-                    source={loader.loader}
+                    alt={"loader" + loader._id}
+                    source={loader.file}
                     size="large"
                   ></Thumbnail>
                 </div>
@@ -173,13 +185,8 @@ const Index = () => {
       <PageActions
         primaryAction={{
           content: "Save",
-          // onAction: () => {
-          //   fetch("https://c20c4a6ac4a9.ngrok.io/hello")
-          //     .then((res) => res.json())
-          //     .then((data) => console.log(data))
-          //     .catch((err) => console.log(err));
-          // },
-          // loading: true/false
+          onAction: () => console.log({ shop }),
+          // loading: true / false,
         }}
         secondaryActions={[
           {

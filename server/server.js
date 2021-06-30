@@ -115,19 +115,19 @@ app.prepare().then(async () => {
       await Shopify.Utils.graphqlProxy(ctx.req, ctx.res);
     }
   );
-  router.get("(/_next/static/.*)", handleRequest); // Static content is clear
-  router.get("/_next/webpack-hmr", handleRequest); // Webpack content is clear
-  router.get("(.*)", verifyRequest(), handleRequest); // Everything else must have sessions
 
   server
-    .use(router.routes())
-    .use(router.allowedMethods())
-
     .use(shopRouter.routes())
     .use(shopRouter.allowedMethods())
 
     .use(gifRouter.routes())
     .use(gifRouter.allowedMethods());
+
+  router.get("(/_next/static/.*)", handleRequest); // Static content is clear
+  router.get("/_next/webpack-hmr", handleRequest); // Webpack content is clear
+  router.get("(.*)", verifyRequest(), handleRequest); // Everything else must have sessions
+
+  server.use(router.routes()).use(router.allowedMethods());
 
   server.listen(port, () => {
     console.log(`> Ready on http://localhost:${port}`);

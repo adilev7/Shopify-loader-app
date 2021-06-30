@@ -51,8 +51,16 @@ function MyProvider(props) {
 }
 
 class MyApp extends App {
+  // shop = new URLSearchParams(this.props.location.search).get("shop");
   render() {
-    const { Component, pageProps, host } = this.props;
+    // console.log({
+    //   Component: this.props.Component,
+    //   router: this.props.router,
+    //   pageProps: this.props.pageProps,
+    //   shop: this.props.router.query.shop,
+    // });
+    const { Component, pageProps, host, router } = this.props;
+    const { shop } = router.query;
     return (
       <AppProvider i18n={translations}>
         <Provider
@@ -62,7 +70,7 @@ class MyApp extends App {
             forceRedirect: true,
           }}
         >
-          <MyProvider Component={Component} {...pageProps} />
+          <MyProvider Component={Component} {...pageProps} shop={shop} />
         </Provider>
       </AppProvider>
     );

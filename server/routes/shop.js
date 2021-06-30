@@ -5,13 +5,13 @@ const shopControl = require("../controllers/shop");
 /* Shop Schema */
 //   {
 //       _id: String,
-//      domain: String,
+//      shopUrl: String,
 //      accessToken: String
 //   }
 
 router.get("Get all shops", "/", async (ctx) => {
   try {
-    const shops = await shopControl.getAllShop();
+    const shops = await shopControl.getAllShops();
     ctx.body = shops;
   } catch (err) {
     console.log(err);

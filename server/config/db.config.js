@@ -9,7 +9,7 @@ const connectionOptions = {
 };
 
 function createURI(options = connectionOptions) {
-  return `mongodb://${options.host}/${options.db}?retryWrites=true&w=majority`;
+  return `mongodb://${options.host}:27017/${options.db}?retryWrites=true&w=majority`;
   // return `mongodb://${options.username}:${options.password}@${options.host}/${options.db}`;
 }
 
@@ -24,7 +24,7 @@ client.connect((err, result) => {
     process.exit(-1);
   }
 
-  console.log("Connected to MongoDB", isConnected());
+  console.log("Connected to MongoDB", isConnected(), result);
 });
 
 const isConnected = () => {

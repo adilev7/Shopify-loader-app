@@ -4,15 +4,19 @@ const gifsCollection = require("../config/db.config").db().collection("gifs");
 //   {
 //       _id: String,
 //      file: String,
-//      shop: String
+//      shopUrl: String
 //   }
 
-const getAllGifs = async () => {
-  return await gifsCollection.find().toArray();
-};
+// const getAllGifs = async () => {
+//   return await gifsCollection.find().toArray();
+// };
 
-const getGif = async (id) => {
-  return await gifsCollection.find({ _id: id }).toArray();
+// const getGif = async (id) => {
+//   return await gifsCollection.find({ _id: id }).toArray();
+// };
+
+const getShopGifs = async (shopUrl) => {
+  return await gifsCollection.find({ shopUrl }).toArray();
 };
 
 const createGif = async (gif) => {
@@ -24,8 +28,7 @@ const deleteGif = async (id) => {
 };
 
 module.exports = {
-  getAllGifs,
-  getGif,
+  getShopGifs,
   createGif,
   deleteGif,
 };
