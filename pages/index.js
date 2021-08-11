@@ -2,81 +2,80 @@ import {
   Page,
   PageActions,
   Thumbnail,
+  SkeletonThumbnail,
+  Loading,
   DropZone,
   Banner,
   List,
-  Layout,
+  Frame,
+  Toast,
 } from "@shopify/polaris";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheckCircle } from "@fortawesome/free-solid-svg-icons";
 import { useState, useCallback, useEffect } from "react";
 import gifService from "./services/gifService";
+import shopService from "./services/shopService";
 
 const Index = ({ shop }) => {
-  console.log({ Index: shop });
-  const [loaders, setLoaders] = useState([
-    {
-      _id: 0,
-      file: require("../images/loader.gif").default,
-      chosen: true,
-    },
-    {
-      _id: 1,
-      file: require("../images/loader-yellow.gif").default,
-      chosen: false,
-    },
-    {
-      _id: 2,
-      file: require("../images/loader.gif").default,
-      chosen: false,
-    },
-    {
-      _id: 3,
-      file: require("../images/loader-yellow.gif").default,
-      chosen: false,
-    },
-  ]);
+  const [loaders, setLoaders] = useState([]);
+  const [active, setActive] = useState(false);
+
+  /* Toast */
+  const toggleActive = useCallback(() => setActive((active) => !active), []);
+  const toastMarkup = active ? (
+    <Toast content="Updated successfully" onDismiss={toggleActive} />
+  ) : null;
+
+  const getShopGifs = useCallback(async () => {
+    const shopGifs = await gifService.getShopGifs(shop);
+    const { data } = await shopService.getShop(shop);
+
+    setLoaders(() => {
+      return shopGifs.map((gif) => {
+        if (gif._id === data.active_gif) {
+          return { ...gif, chosen: true };
+        }
+        return { ...gif, chosen: false };
+      });
+    });
+  }, [shop, setLoaders]);
 
   useEffect(() => {
-    const getGifs = async () => {
-      const { data: shopGifs } = await gifService.getShopGifs(shop);
-      shopGifs && setLoaders((loaders) => [...loaders, ...shopGifs]);
-      console.log({ shopGifs });
-    };
-    getGifs();
+    getShopGifs();
   }, []);
+  useEffect(() => {}, [loaders]);
 
   // const [files, setFiles] = useState([]);
   // const [chosen, setChosen] = useState({});
   const [rejectedFiles, setRejectedFiles] = useState([]);
   const hasError = rejectedFiles.length > 0;
 
-  const handleChosen = ({ _id: chosenId }) => {
-    setLoaders((loaders) =>
-      loaders.map((loader) => {
-        if (loader._id === chosenId) {
-          return { ...loader, chosen: true };
+  const handleChosen = async ({ _id: chosenId }) => {
+    setLoaders((loaders) => {
+      return loaders.map((gif) => {
+        if (gif._id === chosenId) {
+          return { ...gif, chosen: true };
         }
-
-        return { ...loader, chosen: false };
-      })
-    );
+        return { ...gif, chosen: false };
+      });
+    });
+    await shopService.updateShop({ shop, active_gif: chosenId });
+    toggleActive();
   };
 
-  const handleNew = (acceptedFiles) => {
+  const handleNew = async (acceptedFiles) => {
+    const files = [...acceptedFiles];
     if (acceptedFiles.length) {
-      const newLoader = {
-        _id: loaders.length,
-        file: window.URL.createObjectURL(...acceptedFiles),
-        chosen: true,
+      let newLoader = {
+        file: await base64(files[0]),
+        shop,
       };
-
-      setLoaders((loaders) => {
-        const prevLoaders = loaders.map((loader) => {
-          return { ...loader, chosen: false };
-        });
-        return [...prevLoaders, newLoader];
-      });
+      try {
+        await gifService.createGif(newLoader);
+        await getShopGifs();
+      } catch (err) {
+        console.log(err);
+      }
     }
   };
 
@@ -87,34 +86,6 @@ const Index = ({ shop }) => {
     },
     []
   );
-
-  // const fileUpload = !files.length && <DropZone.FileUpload />;
-  // const uploadedFiles = files.length > 0 && (
-  //   <>
-  //     {files.map((file, index) => (
-  //       <Thumbnail
-  //         key={index}
-  //         size="large"
-  //         alt={file.name}
-  //         source={window.URL.createObjectURL(file)}
-  //       />
-  //     ))}
-  //   </>
-  // );
-
-  // const compare = (obj1, obj2) => {
-  //   const keys1 = Object.keys(obj1);
-  //   const keys2 = Object.keys(obj2);
-  //   if (keys1.length !== keys2.length) {
-  //     return false;
-  //   }
-  //   for (let key of keys1) {
-  //     if (obj1[key] !== obj2[key]) {
-  //       return false;
-  //     }
-  //   }
-  //   return true;
-  // };
 
   const errorMessage = hasError && (
     <Banner
@@ -130,76 +101,82 @@ const Index = ({ shop }) => {
       </List>
     </Banner>
   );
+
   return (
     <Page title="Load Around App">
-      <div className="gifWrap">
-        <div className="gifWrapWrap">
-          {loaders.length &&
-            loaders.map((loader, index) => {
-              console.log(index);
-              return (
-                <div
-                  onClick={() => handleChosen(loader)}
-                  className={loader.chosen ? "is-chosen" : ""}
-                  key={loader._id}
-                >
-                  {loader.chosen && (
-                    <FontAwesomeIcon
-                      icon={faCheckCircle}
-                      size="lg"
-                      style={{
-                        color: "rgb(0, 110, 255)",
-                        position: "absolute",
-                        borderRadius: "100%",
-                        backgroundColor: "#fff",
-                        zIndex: 1,
-                        top: "-9px",
-                        right: "-9px",
-                      }}
-                    />
-                  )}
-                  <Thumbnail
-                    alt={"loader" + loader._id}
-                    source={loader.file}
-                    size="large"
-                  ></Thumbnail>
-                </div>
-              );
-            })}
+      <Frame>
+        <div className="gifWrap">
+          <div className="gifWrapWrap">
+            {loaders.length
+              ? loaders.map(
+                  (loader) =>
+                    loader.file && (
+                      <div
+                        onClick={() => handleChosen(loader)}
+                        className={loader.chosen ? "is-chosen" : ""}
+                        key={loader._id}
+                      >
+                        {loader.chosen && (
+                          <FontAwesomeIcon
+                            icon={faCheckCircle}
+                            size="lg"
+                            style={{
+                              color: "rgb(0, 110, 255)",
+                              position: "absolute",
+                              borderRadius: "100%",
+                              backgroundColor: "#fff",
+                              zIndex: 1,
+                              top: "-9px",
+                              right: "-9px",
+                            }}
+                          />
+                        )}
+                        <Thumbnail
+                          alt={"loader" + loader._id}
+                          source={loader.file}
+                          size="large"
+                        ></Thumbnail>
+                      </div>
+                    )
+                )
+              : [...Array(4)].map((val, idx) => (
+                  <div key={idx}>
+                    <SkeletonThumbnail size="large" fill={true} />
+                    <Loading />
+                  </div>
+                ))}
+          </div>
         </div>
-      </div>
-      <div className="dropZoneWrap">
-        {errorMessage}
-        <DropZone
-          accept="image/*"
-          type="image"
-          allowMultiple={false}
-          onDrop={(_droppedFiles, acceptedFiles, rejectedFiles) => {
-            handleDrop(_droppedFiles, acceptedFiles, rejectedFiles);
-            handleNew(acceptedFiles);
-          }}
-        >
-          <DropZone.FileUpload />
-        </DropZone>
-      </div>
-      <PageActions
-        primaryAction={{
-          content: "Save",
-          onAction: () => console.log({ shop }),
-          // loading: true / false,
-        }}
-        secondaryActions={[
-          {
-            content: "Sync",
-            // onAction: () => doSomething(),
-            // loading: true/false
-          },
-        ]}
-      />
-      {/* </Layout.Section> */}
-      {/* </Layout> */}
+        <div className="dropZoneWrap">
+          {errorMessage}
+          <DropZone
+            accept="image/*"
+            type="image"
+            allowMultiple={false}
+            onDrop={(_droppedFiles, acceptedFiles, rejectedFiles) => {
+              handleDrop(_droppedFiles, acceptedFiles, rejectedFiles);
+              handleNew(acceptedFiles);
+            }}
+          >
+            <DropZone.FileUpload />
+          </DropZone>
+        </div>
+        {toastMarkup}
+      </Frame>
     </Page>
   );
 };
+
+function base64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      debugger;
+      resolve(reader.result);
+    };
+    reader.onerror = (error) => reject(error);
+  });
+}
 
 export default Index;

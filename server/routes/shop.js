@@ -21,6 +21,7 @@ router.get("Get all shops", "/", async (ctx) => {
 router.get("Get shop", "/:id", async (ctx) => {
   try {
     const shop = await shopControl.getShop(ctx.params.id);
+    debugger;
     ctx.body = shop;
   } catch (err) {
     console.log(err);
@@ -36,7 +37,7 @@ router.post("Create shop", "/", async (ctx) => {
     ctx.body = "Failed to update database";
   }
 });
-router.put("Update shop", "/", async (ctx) => {
+router.patch("Update shop", "/", async (ctx) => {
   try {
     const shop = await shopControl.updateShop(ctx.request.body);
     ctx.body = shop;

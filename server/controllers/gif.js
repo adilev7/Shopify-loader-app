@@ -7,28 +7,40 @@ const gifsCollection = require("../config/db.config").db().collection("gifs");
 //      shopUrl: String
 //   }
 
-// const getAllGifs = async () => {
-//   return await gifsCollection.find().toArray();
-// };
+const getShopGifs = async (shop) => {
+  const gifs = await gifsCollection
+    .find({ $or: [{ shop: "-1" }, { shop }] })
+    .toArray();
+  return gifs;
+};
 
-// const getGif = async (id) => {
-//   return await gifsCollection.find({ _id: id }).toArray();
-// };
-
-const getShopGifs = async (shopUrl) => {
-  return await gifsCollection.find({ shopUrl }).toArray();
+const getGif = async (id) => {
+  const gif = await gifsCollection.findOne({ _id: id });
+  return gif;
 };
 
 const createGif = async (gif) => {
-  return await gifsCollection.insertOne(gif);
+  try {
+    await gifsCollection.insertOne(gif);
+  } catch (err) {
+    throw new Error(err);
+  }
 };
 
 const deleteGif = async (id) => {
-  return await gifsCollection.deleteOne({ _id: id });
+  const { data } = await gifsCollection.deleteOne({ _id: id });
+  return data;
+};
+
+const deleteShopGifs = async (shop) => {
+  const { data } = await gifsCollection.deleteMany({ shop });
+  return data;
 };
 
 module.exports = {
   getShopGifs,
+  getGif,
   createGif,
   deleteGif,
+  deleteShopGifs,
 };

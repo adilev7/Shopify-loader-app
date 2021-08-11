@@ -16,6 +16,9 @@
   max-width: 115px;
   width: 25%;
 }
+.gifWrapWrap > .Polaris-SkeletonThumbnail {
+  height: 115px;
+}
 .gifWrapWrap > * > .Polaris-Thumbnail {
   width: 100%;
   padding: 0.1em;

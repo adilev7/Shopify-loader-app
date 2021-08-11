@@ -24,7 +24,7 @@ client.connect((err, result) => {
     process.exit(-1);
   }
 
-  console.log("Connected to MongoDB", isConnected(), result);
+  console.log("Connected to MongoDB", isConnected());
 });
 
 const isConnected = () => {

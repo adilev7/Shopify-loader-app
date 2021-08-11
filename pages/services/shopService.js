@@ -10,9 +10,8 @@ export const getShop = async (shopId) => {
   return shop;
 };
 
-export const editShop = async (shop) => {
-  const { _id: shopId } = shop;
-  return await http.put(`${apiUrl}/shop/${shopId}`, shop);
+export const updateShop = async (shop) => {
+  return await http.patch(`${apiUrl}/shop`, shop);
 };
 
 export const deleteShop = async (shopId) => {
@@ -27,6 +26,6 @@ export default {
   createShop,
   getAllShops,
   getShop,
-  editShop,
+  updateShop,
   deleteShop,
 };

@@ -1,18 +1,20 @@
 import "@babel/polyfill";
 import "isomorphic-fetch";
-import dotenv from "dotenv";
-import createShopifyAuth, { verifyRequest } from "@shopify/koa-shopify-auth";
-import Shopify, { ApiVersion } from "@shopify/shopify-api";
 import Koa from "koa";
 import next from "next";
 import Router from "koa-router";
-import shopRouter from "./routes/shop";
-import gifRouter from "./routes/gif";
+import Shopify, { ApiVersion } from "@shopify/shopify-api";
+import createShopifyAuth, { verifyRequest } from "@shopify/koa-shopify-auth";
+import dotenv from "dotenv";
 
 const koaBody = require("koa-body");
 const json = require("koa-json");
 const cors = require("koa-cors");
+
 import * as handlers from "./handlers";
+import shopRouter from "./routes/shop";
+import gifRouter from "./routes/gif";
+import shopControl from "./controllers/shop";
 
 dotenv.config();
 const port = parseInt(process.env.PORT, 10) || 8081;
@@ -27,7 +29,7 @@ Shopify.Context.initialize({
   API_SECRET_KEY: process.env.SHOPIFY_API_SECRET,
   SCOPES: process.env.SCOPES.split(","),
   HOST_NAME: process.env.HOST.replace(/https:\/\//, ""),
-  API_VERSION: ApiVersion.October20,
+  API_VERSION: ApiVersion.April21,
   IS_EMBEDDED_APP: true,
   // This should be replaced with your preferred storage strategy
   SESSION_STORAGE: new Shopify.Session.MemorySessionStorage(),
@@ -37,10 +39,24 @@ Shopify.Context.initialize({
 // persist this object in your app.
 const ACTIVE_SHOPIFY_SHOPS = {};
 
+// Build ACTIVE_SHOPIFY_SHOPS obect
+shopControl
+  .getAllShops()
+  .then((shops) => {
+    if (shops?.length) {
+      return shops.map(({ shop }) => {
+        ACTIVE_SHOPIFY_SHOPS[shop] = process.env.SCOPES;
+        debugger;
+      });
+    }
+  })
+  .catch((err) => console.error(err));
+
 app.prepare().then(async () => {
   const server = new Koa();
   const router = new Router();
   server.keys = [Shopify.Context.API_SECRET_KEY];
+
   server
     .use(json())
     .use(koaBody())
@@ -50,16 +66,22 @@ app.prepare().then(async () => {
         async afterAuth(ctx) {
           // Access token and shop available in ctx.state.shopify
           const { shop, accessToken, scope } = ctx.state.shopify;
-          console.log({ accessToken });
-          ACTIVE_SHOPIFY_SHOPS[shop] = scope;
+
+          if (!ACTIVE_SHOPIFY_SHOPS[shop]) {
+            debugger;
+            ACTIVE_SHOPIFY_SHOPS[shop] = scope;
+            await shopControl.createShop(shop);
+          }
 
           const response = await Shopify.Webhooks.Registry.register({
             shop,
             accessToken,
             path: "/webhooks",
             topic: "APP_UNINSTALLED",
-            webhookHandler: async (topic, shop, body) =>
-              delete ACTIVE_SHOPIFY_SHOPS[shop],
+            webhookHandler: async (topic, shop, body) => {
+              delete ACTIVE_SHOPIFY_SHOPS[shop];
+              await shopControl.deleteShop(shop);
+            },
           });
 
           if (!response.success) {
@@ -69,13 +91,15 @@ app.prepare().then(async () => {
           }
 
           ctx.shop = shop;
-          ctx.myHost = ctx.query.host;
-          ctx.client = handlers.createClient(shop, accessToken);
+          ctx.queryHost = ctx.query.host;
+          ctx.accessToken = accessToken;
+          ctx.client = handlers.createClient(ctx);
           await handlers
             .getSubscriptionUrl(ctx)
             .catch((err) => console.log("getSubscriptionUrl 68", err));
-          handlers.initApp(shop, accessToken);
-
+          await handlers
+            .initApp(ctx)
+            .catch((err) => console.log({ "initApp ERROR": err }));
           // Redirect to app with shop parameter upon auth
           // ctx.redirect(`/?shop=${shop}&host=${ctx.query.host}`);
         },

@@ -1,30 +1,44 @@
 const shopsCollection = require("../config/db.config").db().collection("shops");
+const gifControl = require("./gif");
 
 /* Shop Schema */
 //   {
 //       _id: String,
-//      domain: String,
-//      accessToken: String
+//      shop: String,
+//      active_gif: String
 //   }
 
 const getAllShops = async () => {
-  return await shopsCollection.find().toArray();
+  const shops = await shopsCollection.find().toArray();
+  return shops;
 };
 
-const getShop = async (id) => {
-  return await shopsCollection.find({ _id: id }).toArray();
+const getShop = async (shop) => {
+  const data = await shopsCollection.findOne({ shop });
+  return data;
 };
 
 const createShop = async (shop) => {
-  return await shopsCollection.insertOne(shop);
+  const appGifs = await gifControl.getShopGifs("-1");
+  const shopObj = { shop, active_gif: appGifs[0]._id };
+  const { data } = await shopsCollection.insertOne(shopObj);
+  return data;
 };
 
-const updateShop = async ({ _id, accessToken }) => {
-  return await shopsCollection.updateOne({ _id }, { $set: { accessToken } });
+const updateShop = async ({ shop, active_gif }) => {
+  try {
+    await shopsCollection.updateOne({ shop }, { $set: { active_gif } });
+    debugger;
+  } catch (err) {
+    debugger;
+    throw new Error(err);
+  }
 };
 
-const deleteShop = async (id) => {
-  return await shopsCollection.deleteOne({ _id: id });
+const deleteShop = async (shop) => {
+  await gifControl.deleteShopGifs(shop);
+  const { data } = await shopsCollection.deleteOne({ shop });
+  return data;
 };
 
 module.exports = {

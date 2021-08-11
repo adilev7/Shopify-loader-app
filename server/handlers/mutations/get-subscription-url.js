@@ -39,7 +39,7 @@ export function RECURRING_CREATE(url) {
 }
 
 export const getSubscriptionUrl = async (ctx) => {
-  const { client, shop, myHost: host } = ctx;
+  const { client, shop, queryHost: host } = ctx;
   const confirmationUrl = await client
     .mutate({
       // mutation: RECURRING_CREATE(process.env.HOST),
