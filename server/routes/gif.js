@@ -2,6 +2,7 @@ const Router = require("koa-router");
 const router = new Router({ prefix: "/gif" });
 const gifControl = require("../controllers/gif");
 const shopControl = require("../controllers/shop");
+import verifyToken from "../middlewares/verifyToken";
 
 /* Gif Schema */
 //   {
@@ -10,7 +11,7 @@ const shopControl = require("../controllers/shop");
 //      shop: String
 //   }
 
-router.get("Get shop gifs", "/", async (ctx) => {
+router.get("Get shop gifs", "/", verifyToken, async (ctx) => {
   try {
     // First get the currently active gif id
     const shop = await shopControl.getShop(ctx.query.shop);
@@ -32,7 +33,7 @@ router.get("Get shop gifs", "/", async (ctx) => {
     ctx.body = err;
   }
 });
-router.get("Get gif", "/:id", async (ctx) => {
+router.get("Get gif", "/:id", verifyToken, async (ctx) => {
   try {
     const gif = await gifControl.getGif(ctx.params.id);
     if (!gif) {
@@ -44,13 +45,12 @@ router.get("Get gif", "/:id", async (ctx) => {
     ctx.body = err;
   }
 });
-router.post("Create gif", "/", async (ctx) => {
+router.post("Create gif", "/", verifyToken, async (ctx) => {
   const gif = ctx.request.body;
 
   try {
     await gifControl.createGif(gif);
-    await shopControl.updateShop({ shop: gif.shop, active_gif: gif._id });
-    debugger;
+    // await shopControl.updateActiveGif({ shop: gif.shop, active_gif: gif._id });
   } catch (err) {
     console.log(err);
   }
@@ -59,13 +59,12 @@ router.post("Create gif", "/", async (ctx) => {
 //   try {
 //     const gifs = await gifControl.updateGifs(ctx.request.body);
 //     ctx.body = gifs;
-//     debugger;
 //   } catch (err) {
 //     console.log(err);
 //     ctx.body = "Failed to update database";
 //   }
 // });
-router.delete("Delete gif", "/:id", async (ctx) => {
+router.delete("Delete gif", "/:id", verifyToken, async (ctx) => {
   try {
     const gif = await gifControl.deleteGif(ctx.params.id);
     ctx.body = gif;

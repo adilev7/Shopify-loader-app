@@ -15,6 +15,8 @@ import * as handlers from "./handlers";
 import shopRouter from "./routes/shop";
 import gifRouter from "./routes/gif";
 import shopControl from "./controllers/shop";
+import { getBillingStatus } from "./handlers/queries/get-billing-status";
+import verifyToken from "./middlewares/verifyToken";
 
 dotenv.config();
 const port = parseInt(process.env.PORT, 10) || 8081;
@@ -29,7 +31,7 @@ Shopify.Context.initialize({
   API_SECRET_KEY: process.env.SHOPIFY_API_SECRET,
   SCOPES: process.env.SCOPES.split(","),
   HOST_NAME: process.env.HOST.replace(/https:\/\//, ""),
-  API_VERSION: ApiVersion.April21,
+  API_VERSION: ApiVersion.July21,
   IS_EMBEDDED_APP: true,
   // This should be replaced with your preferred storage strategy
   SESSION_STORAGE: new Shopify.Session.MemorySessionStorage(),
@@ -50,7 +52,7 @@ shopControl
       });
     }
   })
-  .catch((err) => console.error(err));
+  .catch((err) => console.log(err));
 
 app.prepare().then(async () => {
   const server = new Koa();
@@ -60,18 +62,19 @@ app.prepare().then(async () => {
   server
     .use(json())
     .use(koaBody())
-    .use(cors({ origin: "*" }))
+    .use(cors({ origin: "*", headers: ["Access-Control-Allow-Origin"] }))
     .use(
       createShopifyAuth({
         async afterAuth(ctx) {
           // Access token and shop available in ctx.state.shopify
           const { shop, accessToken, scope } = ctx.state.shopify;
-
+          debugger;
           if (!ACTIVE_SHOPIFY_SHOPS[shop]) {
             debugger;
             ACTIVE_SHOPIFY_SHOPS[shop] = scope;
-            await shopControl.createShop(shop);
+            await shopControl.createShop(shop, accessToken);
           }
+          debugger;
 
           const response = await Shopify.Webhooks.Registry.register({
             shop,
@@ -94,14 +97,11 @@ app.prepare().then(async () => {
           ctx.queryHost = ctx.query.host;
           ctx.accessToken = accessToken;
           ctx.client = handlers.createClient(ctx);
-          await handlers
+
+          const confirmationUrl = await handlers
             .getSubscriptionUrl(ctx)
-            .catch((err) => console.log("getSubscriptionUrl 68", err));
-          await handlers
-            .initApp(ctx)
-            .catch((err) => console.log({ "initApp ERROR": err }));
-          // Redirect to app with shop parameter upon auth
-          // ctx.redirect(`/?shop=${shop}&host=${ctx.query.host}`);
+            .catch((err) => console.log("getSubscriptionUrl", err));
+          ctx.redirect(confirmationUrl);
         },
       })
     );
@@ -122,6 +122,78 @@ app.prepare().then(async () => {
       await handleRequest(ctx);
     }
   });
+
+  router.get("Check billing", "/billing", verifyToken, async (ctx, next) => {
+    ctx.client = handlers.createClient(ctx);
+    ctx.queryHost = Buffer.from(ctx.query.shop).toString("base64");
+    const { billed, initialized } = await shopControl
+      .getShop(ctx.shop)
+      .catch((err) => {
+        ctx.throw(err);
+      });
+    const billingStatus = await getBillingStatus(ctx).catch((err) => {
+      console.log(new Error(`Failed to fetch billing status: ${err}`));
+      ctx.throw(err);
+    });
+    if (billingStatus !== "ACTIVE") {
+      const confirmationUrl = await handlers
+        .getSubscriptionUrl(ctx)
+        .catch((err) => {
+          console.log("getSubscriptionUrl", err);
+          ctx.throw(err);
+        });
+      ctx.body = confirmationUrl;
+      return;
+    }
+    if (!billed) {
+      await shopControl.updateBillingStatus(ctx.shop, true);
+    }
+    if (!initialized) {
+      await handlers.initApp(ctx).catch((err) => {
+        console.log({ "initApp ERROR": err });
+        ctx.throw(err);
+      });
+    }
+
+    ctx.body = null;
+  });
+  // router.get(
+  //   "Get billing status",
+  //   "/billing-status",
+  //   verifyToken,
+  //   async (ctx) => {
+  //     ctx.client = handlers.createClient(ctx);
+  //     const billingStatus = await getBillingStatus(ctx).catch((err) => {
+  //       console.log(new Error(`Failed to fetch billing status: ${err}`));
+  //       ctx.throw(err);
+  //     });
+  //     ctx.body = billingStatus;
+  //   }
+  // );
+
+  // router.get(
+  //   "Redirect to billing page",
+  //   "/billing",
+  //   verifyToken,
+  //   async (ctx) => {
+  //     ctx.queryHost = Buffer.from(ctx.query.shop).toString("base64");
+  //     ctx.client = handlers.createClient(ctx);
+  //     await handlers.getSubscriptionUrl(ctx).catch((err) => {
+  //       console.log("getSubscriptionUrl", err);
+  //       ctx.throw(err);
+  //     });
+  //     ctx.body = "Redirected to billing page";
+  //   }
+  // );
+
+  // router.get("Initialize app", "/init", verifyToken, async (ctx) => {
+  //   ctx.client = handlers.createClient(ctx);
+  //   await handlers.initApp(ctx).catch((err) => {
+  //     console.log({ "initApp ERROR": err });
+  //     ctx.throw(err);
+  //   });
+  //   ctx.body = "App initiated";
+  // });
 
   router.post("/webhooks", async (ctx) => {
     try {

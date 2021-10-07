@@ -1,6 +1,8 @@
 const Router = require("koa-router");
 const router = new Router({ prefix: "/shop" });
 const shopControl = require("../controllers/shop");
+import { updateApp } from "../handlers/updateApp";
+import verifyToken from "../middlewares/verifyToken";
 
 /* Shop Schema */
 //   {
@@ -9,7 +11,7 @@ const shopControl = require("../controllers/shop");
 //      accessToken: String
 //   }
 
-router.get("Get all shops", "/", async (ctx) => {
+router.get("Get all shops", "/", verifyToken, async (ctx) => {
   try {
     const shops = await shopControl.getAllShops();
     ctx.body = shops;
@@ -18,17 +20,17 @@ router.get("Get all shops", "/", async (ctx) => {
     ctx.body = "Failed to update database";
   }
 });
-router.get("Get shop", "/:id", async (ctx) => {
+router.get("Get shop", "/", verifyToken, async (ctx) => {
   try {
-    const shop = await shopControl.getShop(ctx.params.id);
-    debugger;
+    const shop = await shopControl.getShop(ctx.query.shop);
     ctx.body = shop;
   } catch (err) {
     console.log(err);
     ctx.body = "Failed to update database";
   }
 });
-router.post("Create shop", "/", async (ctx) => {
+
+router.post("Create shop", "/", verifyToken, async (ctx) => {
   try {
     const shop = await shopControl.createShop(ctx.request.body);
     ctx.body = shop;
@@ -37,16 +39,25 @@ router.post("Create shop", "/", async (ctx) => {
     ctx.body = "Failed to update database";
   }
 });
-router.patch("Update shop", "/", async (ctx) => {
+router.patch("Update shop active gif", "/", verifyToken, async (ctx) => {
   try {
-    const shop = await shopControl.updateShop(ctx.request.body);
+    const shop = await shopControl.updateActiveGif(ctx);
+    await updateApp(ctx);
     ctx.body = shop;
   } catch (err) {
     console.error(err);
     ctx.body = "Failed to update database";
   }
 });
-router.delete("Delete shop", "/:id", async (ctx) => {
+router.patch("Update shop init status", "/init", verifyToken, async (ctx) => {
+  try {
+    ctx.body = await shopControl.updateInitStatus(ctx);
+  } catch (err) {
+    console.error(err);
+    ctx.body = "Failed to update database";
+  }
+});
+router.delete("Delete shop", "/:id", verifyToken, async (ctx) => {
   try {
     const shop = await shopControl.deleteShop(ctx.params.id);
     ctx.body = shop;

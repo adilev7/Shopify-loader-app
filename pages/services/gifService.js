@@ -3,21 +3,22 @@ import { apiUrl } from "../config.json";
 
 export const getShopGifs = async (shop) => {
   const { data: gifs } = await http.get(`${apiUrl}/gif?shop=${shop}`);
-  debugger;
   return gifs;
 };
 
 export const createGif = async (gif) => {
   try {
-    const data = await http.post(`${apiUrl}/gif`, gif);
+    const data = await http.post(`${apiUrl}/gif?shop=${gif.shop}`, gif);
     return data;
   } catch (err) {
     console.log(err);
   }
 };
 
-export const deleteGif = async (gifId) => {
-  const { data } = await http.delete(`${apiUrl}/gif/${gifId}`);
+export const deleteGif = async (gif) => {
+  const { data } = await http.delete(
+    `${apiUrl}/gif/${gif._id}?shop=${gif.shop}`
+  );
   return data;
 };
 

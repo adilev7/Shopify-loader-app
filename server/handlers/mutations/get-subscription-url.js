@@ -5,22 +5,21 @@ export function RECURRING_CREATE(url) {
   return gql`
     mutation {
       appSubscriptionCreate(
-          name: "Super Duper Plan"
+          name: "Normal Plan"
           returnUrl: "${url}"
           test: true
           lineItems: [
           {
             plan: {
               appUsagePricingDetails: {
-                  cappedAmount: { amount: 10, currencyCode: USD }
-                  terms: "$1 for 1000 emails"
+                  cappedAmount: { amount: 3, currencyCode: USD }
               }
             }
           }
           {
             plan: {
               appRecurringPricingDetails: {
-                  price: { amount: 10, currencyCode: USD }
+                  price: { amount: 3, currencyCode: USD }
               }
             }
           }
@@ -48,6 +47,6 @@ export const getSubscriptionUrl = async (ctx) => {
       ),
     })
     .then((response) => response.data.appSubscriptionCreate.confirmationUrl);
-
-  return ctx.redirect(confirmationUrl);
+  // ctx.set("Access-Control-Allow-Origin", "*");
+  return confirmationUrl;
 };

@@ -32,21 +32,3 @@ const isConnected = () => {
 };
 
 module.exports = client;
-
-// const connect = () => {
-//   MongoClient.connect(
-//     createURI(),
-//     { useNewUrlParser: true, useUnifiedTopology: true },
-//     function (err, client) {
-//       if (err) {
-//         console.log("Failed to connect to MongoDB");
-//         throw err;
-//       }
-//       console.log("Connected to MongoDB...");
-//       db = client.db();
-//       client.close();
-//     }
-//   );
-// };
-
-// module.exports = { connect, db };

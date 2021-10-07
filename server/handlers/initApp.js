@@ -1,9 +1,10 @@
 import "isomorphic-fetch";
 import { gql } from "apollo-boost";
+import { getBillingStatus } from "./queries/get-billing-status";
 const shopControl = require("../controllers/shop");
 const gifControl = require("../controllers/gif");
 
-function INIT_APP() {
+function CREATE_SCRIPT_TAG() {
   return gql`
     mutation scriptTagCreate($input: ScriptTagInput!) {
       scriptTagCreate(input: $input) {
@@ -26,7 +27,7 @@ export const initApp = async (ctx) => {
   /* ===== Create scriptTag ===== */
   await client
     .mutate({
-      mutation: INIT_APP(),
+      mutation: CREATE_SCRIPT_TAG(),
       variables: {
         input: {
           src: `https://${host}/script`,
@@ -86,17 +87,27 @@ export const initApp = async (ctx) => {
   /* ===== Update theme.liquid file code ===== */
   const updateThemeLiquid = async (mainTheme, themeLiquid) => {
     /* ===== Prepare code for upload ===== */
+    let newThemeLiquid = themeLiquid.slice();
     const loaderImg =
-      "\n<!--~~~~~~~~~~ Loader app GIF - Look Around Apps ~~~~~~~~~~-->\n" +
+      "\n\n<!--~~~~~~~~~~ Loader app GIF - Look Around Apps ~~~~~~~~~~-->\n" +
       `{% if content_for_header contains '${host}' %}\n` +
       "    {% render 'loadAroundApp' %}\n" +
-      "{% endif %}\n\n";
+      "{% endif %}" +
+      "\n<!--~~~~~~~~~~ Loader app GIF - Look Around Apps ~~~~~~~~~~-->\n\n";
 
-    if (!themeLiquid.includes(loaderImg)) {
-      const newThemeLiquid = themeLiquid.replace(
-        "</body>",
-        `${loaderImg}</body>`
+    if (
+      newThemeLiquid.includes(
+        "<!--~~~~~~~~~~ Loader app GIF - Look Around Apps ~~~~~~~~~~-->"
+      )
+    ) {
+      newThemeLiquid = newThemeLiquid.split(
+        "<!--~~~~~~~~~~ Loader app GIF - Look Around Apps ~~~~~~~~~~-->"
       );
+      newThemeLiquid = newThemeLiquid[0] + newThemeLiquid[2];
+    }
+
+    if (!newThemeLiquid.includes(loaderImg)) {
+      newThemeLiquid = newThemeLiquid.replace("</body>", `${loaderImg}</body>`);
 
       try {
         await fetch(`${baseUrl}/themes/${mainTheme.id}/assets.json`, {
@@ -113,7 +124,6 @@ export const initApp = async (ctx) => {
             "Content-Type": "application/json",
           },
         });
-        debugger;
       } catch (err) {
         throw new Error(`Failed to update 'theme.liquid':  ${err}`);
       }
@@ -131,9 +141,7 @@ export const initApp = async (ctx) => {
       if (!file)
         throw new Error(`Failed to fetch active shop gif file from DB`);
 
-      // TODO - Check if uploaded files also need split ▼
       const activeGif = file.split("base64,")[1];
-      debugger;
 
       await fetch(`${baseUrl}/themes/${mainTheme.id}/assets.json`, {
         method: "PUT",
@@ -157,19 +165,22 @@ export const initApp = async (ctx) => {
   const createAppSnippet = async (mainTheme) => {
     const appSnippet =
       "<style>\n" +
-      "    body {\n" +
-      "        overflow: hidden;\n" +
-      "    }\n" +
       "    .loadAroundApp {\n" +
-      "        display: flex;\n" +
-      "        position: absolute;\n" +
+      "        position: fixed;\n" +
       "        top: 0;\n" +
-      "        width: 100vw;\n" +
-      "        height: 100vh;\n" +
-      "        align-content: center;\n" +
-      "        justify-content: center;\n" +
+      "        left: 0;\n" +
       "        z-index: 999;\n" +
-      "        background-color: #ffffff;\n" +
+      "        display: flex;\n" +
+      "        flex-direction: column;\n" +
+      "        align-items: center;\n" +
+      "        justify-content: center;\n" +
+      "        width: 100%;\n" +
+      "        height: 100%;\n" +
+      "        background-color: #FFFFFF;\n" +
+      "        transition: all 0.3s ease-in-out;\n" +
+      "    }\n" +
+      "    .loadAroundApp > * {\n" +
+      "        max-width: 150px;\n" +
       "    }\n" +
       "</style>\n\n" +
       "<div class='loadAroundApp'>\n" +
@@ -179,9 +190,11 @@ export const initApp = async (ctx) => {
       "<script>\n" +
       "    $(() => {\n" +
       "        setTimeout(() => {\n" +
-      "            $('.loadAroundApp').fadeOut();\n" +
-      "            $('body').css('overflow', 'auto');\n" +
+      "            $('.loadAroundApp').css('opacity', 0);\n" +
       "        }, 1000);\n" +
+      "        setTimeout(() => {\n" +
+      "            $('.loadAroundApp').hide();\n" +
+      "        }, 1300);\n" +
       "    });\n" +
       "</script>";
 
@@ -204,9 +217,16 @@ export const initApp = async (ctx) => {
     }
   };
 
-  const mainTheme = await fetchMainTheme();
-  const themeLiquid = await fetchThemeLiquid(mainTheme);
-  updateThemeLiquid(mainTheme, themeLiquid);
-  createGif(mainTheme);
-  createAppSnippet(mainTheme);
+  if (host && client && shop && accessToken) {
+    try {
+      const mainTheme = await fetchMainTheme();
+      const themeLiquid = await fetchThemeLiquid(mainTheme);
+      updateThemeLiquid(mainTheme, themeLiquid);
+      createGif(mainTheme);
+      createAppSnippet(mainTheme);
+      shopControl.updateInitStatus(shop, true);
+    } catch (err) {
+      throw err;
+    }
+  }
 };

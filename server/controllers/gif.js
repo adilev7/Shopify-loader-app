@@ -1,5 +1,5 @@
 const gifsCollection = require("../config/db.config").db().collection("gifs");
-
+const mongo = require("mongodb");
 /* Gif Schema */
 //   {
 //       _id: String,
@@ -15,7 +15,8 @@ const getShopGifs = async (shop) => {
 };
 
 const getGif = async (id) => {
-  const gif = await gifsCollection.findOne({ _id: id });
+  const _id = new mongo.ObjectID(id);
+  const gif = await gifsCollection.findOne({ _id });
   return gif;
 };
 
@@ -28,7 +29,8 @@ const createGif = async (gif) => {
 };
 
 const deleteGif = async (id) => {
-  const { data } = await gifsCollection.deleteOne({ _id: id });
+  const _id = new mongo.ObjectID(id);
+  const { data } = await gifsCollection.deleteOne({ _id });
   return data;
 };
 

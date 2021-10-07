@@ -8,45 +8,57 @@ import {
   Banner,
   List,
   Frame,
-  Toast,
 } from "@shopify/polaris";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheckCircle } from "@fortawesome/free-solid-svg-icons";
 import { useState, useCallback, useEffect } from "react";
 import gifService from "./services/gifService";
 import shopService from "./services/shopService";
+import { Redirect } from "@shopify/app-bridge/actions";
+import http from "./services/httpService";
+import { apiUrl } from "./config.json";
 
-const Index = ({ shop }) => {
+const Index = ({ shop, app }) => {
   const [loaders, setLoaders] = useState([]);
-  const [active, setActive] = useState(false);
-
-  /* Toast */
-  const toggleActive = useCallback(() => setActive((active) => !active), []);
-  const toastMarkup = active ? (
-    <Toast content="Updated successfully" onDismiss={toggleActive} />
-  ) : null;
 
   const getShopGifs = useCallback(async () => {
     const shopGifs = await gifService.getShopGifs(shop);
-    const { data } = await shopService.getShop(shop);
+    const data = await shopService.getShop(shop);
 
     setLoaders(() => {
       return shopGifs.map((gif) => {
         if (gif._id === data.active_gif) {
           return { ...gif, chosen: true };
         }
+
         return { ...gif, chosen: false };
       });
     });
   }, [shop, setLoaders]);
 
+  const checkBilling = async () => {
+    debugger;
+    return await http
+      .get(`${apiUrl}/billing?shop=${shop}`)
+      .catch((err) => console.log(err));
+  };
+
   useEffect(() => {
-    getShopGifs();
+    debugger;
+    checkBilling()
+      .then(async (data) => {
+        const confirmationUrl = data?.data;
+        if (confirmationUrl) {
+          const redirect = Redirect.create(app);
+          redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl);
+          return;
+        }
+        await getShopGifs();
+      })
+      .catch((err) => console.log("CHECK BILLING ERROR", err));
   }, []);
   useEffect(() => {}, [loaders]);
 
-  // const [files, setFiles] = useState([]);
-  // const [chosen, setChosen] = useState({});
   const [rejectedFiles, setRejectedFiles] = useState([]);
   const hasError = rejectedFiles.length > 0;
 
@@ -59,8 +71,7 @@ const Index = ({ shop }) => {
         return { ...gif, chosen: false };
       });
     });
-    await shopService.updateShop({ shop, active_gif: chosenId });
-    toggleActive();
+    await shopService.updateActiveGif({ shop, active_gif: chosenId });
   };
 
   const handleNew = async (acceptedFiles) => {
@@ -161,7 +172,6 @@ const Index = ({ shop }) => {
             <DropZone.FileUpload />
           </DropZone>
         </div>
-        {toastMarkup}
       </Frame>
     </Page>
   );
@@ -172,7 +182,6 @@ function base64(file) {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = () => {
-      debugger;
       resolve(reader.result);
     };
     reader.onerror = (error) => reject(error);

@@ -45,7 +45,7 @@ function MyProvider(props) {
 
   return (
     <ApolloProvider client={client}>
-      <Component {...props} />
+      <Component {...props} app={app} />
     </ApolloProvider>
   );
 }
