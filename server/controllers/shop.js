@@ -10,25 +10,37 @@ const gifControl = require("./gif");
 //      active_gif: String
 //   }
 
-client.connect((err, result) => {
-  if (err) {
-    console.error(err);
-    process.exit(-1);
-  }
-
-  const shopsCollection = client.db().collection("shops");
-  const getAllShops = async () => {
+const getAllShops = async () => {
+  client.connect((err, result) => {
+    if (err) {
+      console.error(err);
+      process.exit(-1);
+    }
+    const shopsCollection = client.db().collection("shops");
     const shops = await shopsCollection.find().toArray();
     return shops;
-  };
+  });
+};
 
-  const getShop = async (shop) => {
+const getShop = async (shop) => {
+  client.connect((err, result) => {
+    if (err) {
+      console.error(err);
+      process.exit(-1);
+    }
+    const shopsCollection = client.db().collection("shops");
     const data = await shopsCollection.findOne({ shop });
-
     return data;
-  };
+  });
+};
 
-  const createShop = async (shop, accessToken) => {
+const createShop = async (shop, accessToken) => {
+  client.connect((err, result) => {
+    if (err) {
+      console.error(err);
+      process.exit(-1);
+    }
+    const shopsCollection = client.db().collection("shops");
     const appGifs = await gifControl.getShopGifs("-1");
     const shopObj = {
       shop,
@@ -39,46 +51,74 @@ client.connect((err, result) => {
     };
     const { data } = await shopsCollection.insertOne(shopObj);
     return data;
-  };
+  });
+};
 
-  const updateActiveGif = async (ctx) => {
+const updateActiveGif = async (ctx) => {
+  client.connect((err, result) => {
+    if (err) {
+      console.error(err);
+      process.exit(-1);
+    }
+    const shopsCollection = client.db().collection("shops");
     const { shop, active_gif } = ctx.request.body;
     try {
       await shopsCollection.updateOne({ shop }, { $set: { active_gif } });
     } catch (err) {
       throw new Error(err);
     }
-  };
+  });
+};
 
-  const updateBillingStatus = async (shop, billed) => {
+const updateBillingStatus = async (shop, billed) => {
+  client.connect((err, result) => {
+    if (err) {
+      console.error(err);
+      process.exit(-1);
+    }
+    const shopsCollection = client.db().collection("shops");
     try {
       await shopsCollection.updateOne({ shop }, { $set: { billed } });
     } catch (err) {
       throw new Error(err);
     }
-  };
+  });
+};
 
-  const updateInitStatus = async (shop, initialized) => {
+const updateInitStatus = async (shop, initialized) => {
+  client.connect((err, result) => {
+    if (err) {
+      console.error(err);
+      process.exit(-1);
+    }
+    const shopsCollection = client.db().collection("shops");
     try {
       await shopsCollection.updateOne({ shop }, { $set: { initialized } });
     } catch (err) {
       throw new Error(err);
     }
-  };
+  });
+};
 
-  const deleteShop = async (shop) => {
+const deleteShop = async (shop) => {
+  client.connect((err, result) => {
+    if (err) {
+      console.error(err);
+      process.exit(-1);
+    }
+    const shopsCollection = client.db().collection("shops");
     await gifControl.deleteShopGifs(shop);
     const { data } = await shopsCollection.deleteOne({ shop });
     return data;
-  };
+  });
+};
 
-  module.exports = {
-    getAllShops,
-    getShop,
-    createShop,
-    updateActiveGif,
-    updateInitStatus,
-    updateBillingStatus,
-    deleteShop,
-  };
-});
+module.exports = {
+  getAllShops,
+  getShop,
+  createShop,
+  updateActiveGif,
+  updateInitStatus,
+  updateBillingStatus,
+  deleteShop,
+};
