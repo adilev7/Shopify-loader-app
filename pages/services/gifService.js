@@ -1,5 +1,6 @@
 import http from "./httpService";
-import * as apiUrl from "../config";
+import config from "../config.json";
+const apiUrl = config.apiUrl;
 
 export const getShopGifs = async (shop) => {
   const { data: gifs } = await http.get(`${apiUrl}/gif?shop=${shop}`);
