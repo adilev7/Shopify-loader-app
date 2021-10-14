@@ -8,7 +8,7 @@ const mongo = require("mongodb");
 //   }
 
 const getShopGifs = (shop) => {
-  client.connect(async (err, result) => {
+  return client.connect(async (err, result) => {
     if (err) {
       console.error(err);
       process.exit(-1);
@@ -22,7 +22,7 @@ const getShopGifs = (shop) => {
 };
 
 const getGif = (id) => {
-  client.connect(async (err, result) => {
+  return client.connect(async (err, result) => {
     if (err) {
       console.error(err);
       process.exit(-1);
@@ -35,7 +35,7 @@ const getGif = (id) => {
 };
 
 const createGif = (gif) => {
-  client.connect(async (err, result) => {
+  return client.connect(async (err, result) => {
     if (err) {
       console.error(err);
       process.exit(-1);
@@ -50,7 +50,7 @@ const createGif = (gif) => {
 };
 
 const deleteGif = (id) => {
-  client.connect(async (err, result) => {
+  return client.connect(async (err, result) => {
     if (err) {
       console.error(err);
       process.exit(-1);
@@ -63,7 +63,7 @@ const deleteGif = (id) => {
 };
 
 const deleteShopGifs = (shop) => {
-  client.connect(async (err, result) => {
+  return client.connect(async (err, result) => {
     if (err) {
       console.error(err);
       process.exit(-1);

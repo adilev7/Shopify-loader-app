@@ -11,7 +11,7 @@ const gifControl = require("./gif");
 //   }
 
 const getAllShops = () => {
-  client.connect(async (err, result) => {
+  return client.connect(async (err, result) => {
     if (err) {
       console.error(err);
       process.exit(-1);
@@ -23,7 +23,7 @@ const getAllShops = () => {
 };
 
 const getShop = (shop) => {
-  client.connect(async (err, result) => {
+  return client.connect(async (err, result) => {
     if (err) {
       console.error(err);
       process.exit(-1);
@@ -35,7 +35,7 @@ const getShop = (shop) => {
 };
 
 const createShop = (shop, accessToken) => {
-  client.connect(async (err, result) => {
+  return client.connect(async (err, result) => {
     if (err) {
       console.error(err);
       process.exit(-1);
@@ -55,7 +55,7 @@ const createShop = (shop, accessToken) => {
 };
 
 const updateActiveGif = (ctx) => {
-  client.connect(async (err, result) => {
+  return client.connect(async (err, result) => {
     if (err) {
       console.error(err);
       process.exit(-1);
@@ -71,7 +71,7 @@ const updateActiveGif = (ctx) => {
 };
 
 const updateBillingStatus = (shop, billed) => {
-  client.connect(async (err, result) => {
+  return client.connect(async (err, result) => {
     if (err) {
       console.error(err);
       process.exit(-1);
@@ -86,7 +86,7 @@ const updateBillingStatus = (shop, billed) => {
 };
 
 const updateInitStatus = (shop, initialized) => {
-  client.connect(async (err, result) => {
+  return client.connect(async (err, result) => {
     if (err) {
       console.error(err);
       process.exit(-1);
@@ -101,7 +101,7 @@ const updateInitStatus = (shop, initialized) => {
 };
 
 const deleteShop = (shop) => {
-  client.connect(async (err, result) => {
+  return client.connect(async (err, result) => {
     if (err) {
       console.error(err);
       process.exit(-1);
