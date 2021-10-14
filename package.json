@@ -62,6 +62,7 @@
     "babel-register": "^6.26.0",
     "enzyme": "3.11.0",
     "enzyme-adapter-react-16": "1.15.5",
+    "eslint": "^8.0.1",
     "file-loader": "^6.2.0",
     "function.prototype.name": "^1.1.1",
     "husky": "^4.3.6",

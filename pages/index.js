@@ -16,7 +16,7 @@ import gifService from "./services/gifService";
 import shopService from "./services/shopService";
 import { Redirect } from "@shopify/app-bridge/actions";
 import http from "./services/httpService";
-import { apiUrl } from "./config.json";
+import apiUrl from "./config";
 
 const Index = ({ shop, app }) => {
   const [loaders, setLoaders] = useState([]);

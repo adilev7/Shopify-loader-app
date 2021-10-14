@@ -1,5 +1,5 @@
 import http from "./httpService";
-import { apiUrl } from "../config.json";
+import apiUrl from "../config";
 
 export const getAllShops = async () => {
   return await http.get(`${apiUrl}/shop`);
