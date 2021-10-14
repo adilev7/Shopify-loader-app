@@ -10,8 +10,8 @@ const gifControl = require("./gif");
 //      active_gif: String
 //   }
 
-const getAllShops = async () => {
-  client.connect((err, result) => {
+const getAllShops = () => {
+  client.connect(async (err, result) => {
     if (err) {
       console.error(err);
       process.exit(-1);
@@ -22,8 +22,8 @@ const getAllShops = async () => {
   });
 };
 
-const getShop = async (shop) => {
-  client.connect((err, result) => {
+const getShop = (shop) => {
+  client.connect(async (err, result) => {
     if (err) {
       console.error(err);
       process.exit(-1);
@@ -34,8 +34,8 @@ const getShop = async (shop) => {
   });
 };
 
-const createShop = async (shop, accessToken) => {
-  client.connect((err, result) => {
+const createShop = (shop, accessToken) => {
+  client.connect(async (err, result) => {
     if (err) {
       console.error(err);
       process.exit(-1);
@@ -54,8 +54,8 @@ const createShop = async (shop, accessToken) => {
   });
 };
 
-const updateActiveGif = async (ctx) => {
-  client.connect((err, result) => {
+const updateActiveGif = (ctx) => {
+  client.connect(async (err, result) => {
     if (err) {
       console.error(err);
       process.exit(-1);
@@ -70,8 +70,8 @@ const updateActiveGif = async (ctx) => {
   });
 };
 
-const updateBillingStatus = async (shop, billed) => {
-  client.connect((err, result) => {
+const updateBillingStatus = (shop, billed) => {
+  client.connect(async (err, result) => {
     if (err) {
       console.error(err);
       process.exit(-1);
@@ -85,8 +85,8 @@ const updateBillingStatus = async (shop, billed) => {
   });
 };
 
-const updateInitStatus = async (shop, initialized) => {
-  client.connect((err, result) => {
+const updateInitStatus = (shop, initialized) => {
+  client.connect(async (err, result) => {
     if (err) {
       console.error(err);
       process.exit(-1);
@@ -100,8 +100,8 @@ const updateInitStatus = async (shop, initialized) => {
   });
 };
 
-const deleteShop = async (shop) => {
-  client.connect((err, result) => {
+const deleteShop = (shop) => {
+  client.connect(async (err, result) => {
     if (err) {
       console.error(err);
       process.exit(-1);
