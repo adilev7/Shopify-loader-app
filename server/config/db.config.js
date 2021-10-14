@@ -19,17 +19,4 @@ const client = new MongoClient(createURI(), {
   useUnifiedTopology: true,
 });
 
-client.connect((err, result) => {
-  if (err) {
-    console.error(err);
-    process.exit(-1);
-  }
-
-  console.log("Connected to MongoDB", isConnected());
-});
-
-const isConnected = () => {
-  return !!client && !!client.topology && client.topology.isConnected();
-};
-
 module.exports = client;

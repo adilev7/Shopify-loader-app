@@ -58,6 +58,7 @@
   "devDependencies": {
     "@babel/plugin-transform-runtime": "^7.12.10",
     "@babel/preset-stage-3": "^7.0.0",
+    "@types/mongodb": "^4.0.7",
     "babel-jest": "^27.2.5",
     "babel-register": "^6.26.0",
     "enzyme": "3.11.0",
