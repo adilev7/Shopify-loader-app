@@ -9,7 +9,8 @@ const connectionOptions = {
 };
 
 function createURI(options = connectionOptions) {
-  return `mongodb://${options.host}:27017/${options.db}?retryWrites=true&w=majority`;
+  return `mongodb+srv://${options.username}:${options.password}@${options.host}/${options.db}`;
+  // return `mongodb://${options.host}:27017/${options.db}?retryWrites=true&w=majority`;
   // return `mongodb://${options.username}:${options.password}@${options.host}/${options.db}`;
 }
 
