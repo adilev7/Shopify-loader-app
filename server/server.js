@@ -68,13 +68,10 @@ app.prepare().then(async () => {
         async afterAuth(ctx) {
           // Access token and shop available in ctx.state.shopify
           const { shop, accessToken, scope } = ctx.state.shopify;
-          debugger;
           if (!ACTIVE_SHOPIFY_SHOPS[shop]) {
-            debugger;
             ACTIVE_SHOPIFY_SHOPS[shop] = scope;
             await shopControl.createShop(shop, accessToken);
           }
-          debugger;
 
           const response = await Shopify.Webhooks.Registry.register({
             shop,
@@ -157,43 +154,6 @@ app.prepare().then(async () => {
 
     ctx.body = null;
   });
-  // router.get(
-  //   "Get billing status",
-  //   "/billing-status",
-  //   verifyToken,
-  //   async (ctx) => {
-  //     ctx.client = handlers.createClient(ctx);
-  //     const billingStatus = await getBillingStatus(ctx).catch((err) => {
-  //       console.log(new Error(`Failed to fetch billing status: ${err}`));
-  //       ctx.throw(err);
-  //     });
-  //     ctx.body = billingStatus;
-  //   }
-  // );
-
-  // router.get(
-  //   "Redirect to billing page",
-  //   "/billing",
-  //   verifyToken,
-  //   async (ctx) => {
-  //     ctx.queryHost = Buffer.from(ctx.query.shop).toString("base64");
-  //     ctx.client = handlers.createClient(ctx);
-  //     await handlers.getSubscriptionUrl(ctx).catch((err) => {
-  //       console.log("getSubscriptionUrl", err);
-  //       ctx.throw(err);
-  //     });
-  //     ctx.body = "Redirected to billing page";
-  //   }
-  // );
-
-  // router.get("Initialize app", "/init", verifyToken, async (ctx) => {
-  //   ctx.client = handlers.createClient(ctx);
-  //   await handlers.initApp(ctx).catch((err) => {
-  //     console.log({ "initApp ERROR": err });
-  //     ctx.throw(err);
-  //   });
-  //   ctx.body = "App initiated";
-  // });
 
   router.post("/webhooks", async (ctx) => {
     try {
