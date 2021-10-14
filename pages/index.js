@@ -12,10 +12,10 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheckCircle } from "@fortawesome/free-solid-svg-icons";
 import { useState, useCallback, useEffect } from "react";
-import gifService from "./services/gifService";
-import shopService from "./services/shopService";
+import gifService from "../services/gifService";
+import shopService from "../services/shopService";
 import { Redirect } from "@shopify/app-bridge/actions";
-import http from "./services/httpService";
+import http from "../services/httpService";
 import config from "./config.json";
 const apiUrl = config.apiUrl;
 
