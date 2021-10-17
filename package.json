@@ -17,10 +17,6 @@
   "bugs": {
     "url": "https://github.com/shopify/shopify-app-node/issues"
   },
-  "engines": {
-    "node": "14.18.x",
-    "npm": "7.24.x"
-  },
   "dependencies": {
     "@babel/core": "7.12.10",
     "@babel/polyfill": "^7.6.0",
