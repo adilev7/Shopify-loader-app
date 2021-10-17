@@ -28,11 +28,6 @@ export const getBillingStatus = async (shopId) => {
   return data;
 };
 
-const billingRedirect = async () => {
-  const data = await http.get(`${apiUrl}/billing?shop=${shop}`);
-  return data;
-};
-
 export default {
   createShop,
   getAllShops,
