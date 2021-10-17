@@ -25,7 +25,6 @@ const Index = ({ shop, app }) => {
   const getShopGifs = useCallback(async () => {
     const shopGifs = await gifService.getShopGifs(shop);
     const data = await shopService.getShop(shop);
-
     setLoaders(() => {
       return shopGifs.map((gif) => {
         if (gif._id === data.active_gif) {
@@ -38,20 +37,22 @@ const Index = ({ shop, app }) => {
   }, [shop, setLoaders]);
 
   const checkBilling = async () => {
-    debugger;
     return await http
       .get(`${apiUrl}/billing?shop=${shop}`)
       .catch((err) => console.log(err));
   };
 
   useEffect(() => {
-    debugger;
     checkBilling()
       .then(async (data) => {
         const confirmationUrl = data?.data;
         if (confirmationUrl) {
           const redirect = Redirect.create(app);
-          redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl);
+          redirect.dispatch(
+            Redirect.Action.REMOTE,
+            `${apiUrl}/auth?shop=${shop}`
+          );
+          // redirect.dispatch(Redirect.Action.REMOTE, confirmationUrl);
           return;
         }
         await getShopGifs();

@@ -26,6 +26,10 @@ const app = next({
 });
 const handle = app.getRequestHandler();
 
+require("./config/db.config")()
+  .then(() => console.log("Connected to MongoDB"))
+  .catch((err) => console.error(`Failed to connect to MongoDB: ${err}`));
+
 Shopify.Context.initialize({
   API_KEY: process.env.SHOPIFY_API_KEY,
   API_SECRET_KEY: process.env.SHOPIFY_API_SECRET,
@@ -48,7 +52,6 @@ shopControl
     if (shops?.length) {
       return shops.map(({ shop }) => {
         ACTIVE_SHOPIFY_SHOPS[shop] = process.env.SCOPES;
-        debugger;
       });
     }
   })
@@ -68,9 +71,16 @@ app.prepare().then(async () => {
         async afterAuth(ctx) {
           // Access token and shop available in ctx.state.shopify
           const { shop, accessToken, scope } = ctx.state.shopify;
+          let shopExist = await shopControl.getShop(shop);
+
+          if (!shopExist) {
+            shopExist = await shopControl.createShop(shop, accessToken);
+          }
+          if (shopExist.accessToken !== accessToken) {
+            await shopControl.updateAccessToken(shop);
+          }
           if (!ACTIVE_SHOPIFY_SHOPS[shop]) {
             ACTIVE_SHOPIFY_SHOPS[shop] = scope;
-            await shopControl.createShop(shop, accessToken);
           }
 
           const response = await Shopify.Webhooks.Registry.register({

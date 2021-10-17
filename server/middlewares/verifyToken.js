@@ -6,7 +6,6 @@ export const verifyToken = async (ctx, next) => {
     return ctx.throw(400, "Bad Request");
   }
   const data = await shopControl.getShop(shop);
-  debugger;
   if (!data) {
     // return ctx.throw(403, "Not authorized");
     return ctx.redirect(`/auth?shop=${shop}`);

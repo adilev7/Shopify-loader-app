@@ -1,77 +1,35 @@
-const client = require("../config/db.config");
-const mongo = require("mongodb");
-/* Gif Schema */
-//   {
-//       _id: String,
-//      file: String,
-//      shopUrl: String
-//   }
+// const client = require("../config/db.config");
+// const mongo = require("mongodb");
 
-const getShopGifs = (shop) => {
-  return client.connect(async (err, result) => {
-    if (err) {
-      console.error(err);
-      process.exit(-1);
-    }
-    const gifsCollection = client.db().collection("gifs");
-    const gifs = await gifsCollection
-      .find({ $or: [{ shop: "-1" }, { shop }] })
-      .toArray();
-    return gifs;
-  });
+const { Gifs } = require("../schemas/gifSchema");
+
+const getShopGifs = async (shop) => {
+  const gifs = await Gifs.find({ $or: [{ shop: "-1" }, { shop }] });
+  return gifs;
 };
 
-const getGif = (id) => {
-  return client.connect(async (err, result) => {
-    if (err) {
-      console.error(err);
-      process.exit(-1);
-    }
-    const gifsCollection = client.db().collection("gifs");
-    const _id = new mongo.ObjectID(id);
-    const gif = await gifsCollection.findOne({ _id });
-    return gif;
-  });
+const getGif = async (id) => {
+  const gif = await Gifs.findOne({ _id: id });
+  return gif;
 };
 
-const createGif = (gif) => {
-  return client.connect(async (err, result) => {
-    if (err) {
-      console.error(err);
-      process.exit(-1);
-    }
-    const gifsCollection = client.db().collection("gifs");
-    try {
-      await gifsCollection.insertOne(gif);
-    } catch (err) {
-      throw new Error(err);
-    }
-  });
+const createGif = async (gif) => {
+  try {
+    const newGif = new Gifs(gif);
+    newGif.save();
+  } catch (err) {
+    throw new Error(err);
+  }
 };
 
-const deleteGif = (id) => {
-  return client.connect(async (err, result) => {
-    if (err) {
-      console.error(err);
-      process.exit(-1);
-    }
-    const gifsCollection = client.db().collection("gifs");
-    const _id = new mongo.ObjectID(id);
-    const { data } = await gifsCollection.deleteOne({ _id });
-    return data;
-  });
+const deleteGif = async (id) => {
+  const { data } = await Gifs.deleteOne({ _id: id });
+  return data;
 };
 
-const deleteShopGifs = (shop) => {
-  return client.connect(async (err, result) => {
-    if (err) {
-      console.error(err);
-      process.exit(-1);
-    }
-    const gifsCollection = client.db().collection("gifs");
-    const { data } = await gifsCollection.deleteMany({ shop });
-    return data;
-  });
+const deleteShopGifs = async (shop) => {
+  const { data } = await Gifs.deleteMany({ shop });
+  return data;
 };
 
 module.exports = {

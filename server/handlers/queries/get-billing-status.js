@@ -35,9 +35,13 @@ export function GET_ACTIVE_SUBSCRIPTIONS() {
 
 export const getBillingStatus = async (ctx) => {
   const { client } = ctx;
-  const { data } = await client.query({
-    // mutation: RECURRING_CREATE(process.env.HOST),
-    query: GET_ACTIVE_SUBSCRIPTIONS(),
-  });
-  return data.currentAppInstallation.activeSubscriptions[0]?.status;
+  try {
+    const { data } = await client.query({
+      // mutation: RECURRING_CREATE(process.env.HOST),
+      query: GET_ACTIVE_SUBSCRIPTIONS(),
+    });
+    return data.currentAppInstallation.activeSubscriptions[0]?.status;
+  } catch (err) {
+    console.error(err);
+  }
 };

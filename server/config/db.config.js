@@ -1,4 +1,5 @@
-const { MongoClient } = require("mongodb");
+// const { MongoClient } = require("mongodb");
+const mongoose = require("mongoose");
 require("dotenv").config();
 
 const connectionOptions = {
@@ -9,14 +10,21 @@ const connectionOptions = {
 };
 
 function createURI(options = connectionOptions) {
-  return `mongodb+srv://${options.username}:${options.password}@${options.host}/${options.db}`;
+  return `mongodb+srv://${options.username}:${options.password}@${options.host}/${options.db}?retryWrites=true&w=majority`;
   // return `mongodb://${options.host}:27017/${options.db}?retryWrites=true&w=majority`;
   // return `mongodb://${options.username}:${options.password}@${options.host}/${options.db}`;
 }
 
-const client = new MongoClient(createURI(), {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+// const client = new MongoClient(createURI(), {
+//   useNewUrlParser: true,
+//   useUnifiedTopology: true,
+// });
 
-module.exports = client;
+function connect(options = connectionOptions) {
+  return mongoose.connect(createURI(options), {
+    useUnifiedTopology: true,
+    useNewUrlParser: true,
+  });
+}
+
+module.exports = connect;
