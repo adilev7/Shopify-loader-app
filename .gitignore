@@ -19,6 +19,3 @@ config/tunnel.pid
 
 # next build output
 .next/
-
-# config.json (host URL)
-pages/config.json
