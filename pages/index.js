@@ -8,6 +8,8 @@ import {
   Banner,
   List,
   Frame,
+  DisplayText,
+  Heading,
 } from "@shopify/polaris";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheckCircle } from "@fortawesome/free-solid-svg-icons";
@@ -116,7 +118,9 @@ const Index = ({ shop, app }) => {
   );
 
   return (
-    <Page title="Load Around App">
+    <Page>
+      <DisplayText size="large">Loader</DisplayText>
+      <h5 className="subtitle">Choose your loader</h5>
       <Frame>
         <div className="gifWrap">
           <div className="gifWrapWrap">
