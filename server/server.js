@@ -3,7 +3,6 @@ import "isomorphic-fetch";
 import Koa from "koa";
 import next from "next";
 import Router from "koa-router";
-import Shopify, { ApiVersion } from "@shopify/shopify-api";
 import createShopifyAuth, { verifyRequest } from "@shopify/koa-shopify-auth";
 import dotenv from "dotenv";
 
@@ -11,12 +10,16 @@ const koaBody = require("koa-body");
 const json = require("koa-json");
 const cors = require("koa-cors");
 
-import * as handlers from "./handlers";
-import shopRouter from "./routes/shop";
-import gifRouter from "./routes/gif";
-import shopControl from "./controllers/shop";
-import { getBillingStatus } from "./handlers/queries/get-billing-status";
+import Shopify from "./config/shopifyInit"; // Shopify object after initialization
+import { gifRouter, shopRouter, webhookRouter } from "./routes";
+import { shopControl } from "./controllers";
 import verifyToken from "./middlewares/verifyToken";
+import {
+  createClient,
+  getSubscriptionUrl,
+  getBillingStatus,
+  initApp,
+} from "./handlers";
 
 dotenv.config();
 const port = parseInt(process.env.PORT, 10) || 8081;
@@ -30,22 +33,11 @@ require("./config/db.config")()
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.error(`Failed to connect to MongoDB: ${err}`));
 
-Shopify.Context.initialize({
-  API_KEY: process.env.SHOPIFY_API_KEY,
-  API_SECRET_KEY: process.env.SHOPIFY_API_SECRET,
-  SCOPES: process.env.SCOPES.split(","),
-  HOST_NAME: process.env.HOST.replace(/https:\/\//, ""),
-  API_VERSION: ApiVersion.July21,
-  IS_EMBEDDED_APP: true,
-  // This should be replaced with your preferred storage strategy
-  SESSION_STORAGE: new Shopify.Session.MemorySessionStorage(),
-});
-
 // Storing the currently active shops in memory will force them to re-login when your server restarts. You should
 // persist this object in your app.
 const ACTIVE_SHOPIFY_SHOPS = {};
 
-// Build ACTIVE_SHOPIFY_SHOPS obect
+// Build ACTIVE_SHOPIFY_SHOPS object
 shopControl
   .getAllShops()
   .then((shops) => {
@@ -64,7 +56,6 @@ app.prepare().then(async () => {
 
   server
     .use(json())
-    .use(koaBody())
     .use(cors({ origin: "*", headers: ["Access-Control-Allow-Origin"] }))
     .use(
       createShopifyAuth({
@@ -83,17 +74,21 @@ app.prepare().then(async () => {
             ACTIVE_SHOPIFY_SHOPS[shop] = scope;
           }
 
-          const response = await Shopify.Webhooks.Registry.register({
+          let response = await Shopify.Webhooks.Registry.register({
             shop,
             accessToken,
-            path: "/webhooks",
+            path: "/webhooks/app-uninstall",
             topic: "APP_UNINSTALLED",
+
             webhookHandler: async (topic, shop, body) => {
+              // const shopData = JSON.parse(body);
               delete ACTIVE_SHOPIFY_SHOPS[shop];
               await shopControl.deleteShop(shop);
+              console.log(`App uninstalled for shop: ${shop}`);
+              ctx.response = 200;
+              ctx.body = `App uninstalled for shop: ${shop}`;
             },
           });
-
           if (!response.success) {
             console.log(
               `Failed to register APP_UNINSTALLED webhook: ${response.result}`
@@ -103,15 +98,19 @@ app.prepare().then(async () => {
           ctx.shop = shop;
           ctx.queryHost = ctx.query.host;
           ctx.accessToken = accessToken;
-          ctx.client = handlers.createClient(ctx);
+          ctx.client = createClient(ctx);
 
-          const confirmationUrl = await handlers
-            .getSubscriptionUrl(ctx)
-            .catch((err) => console.log("getSubscriptionUrl", err));
+          const confirmationUrl = await getSubscriptionUrl(ctx).catch((err) =>
+            console.log("getSubscriptionUrl", err)
+          );
           ctx.redirect(confirmationUrl);
         },
       })
     );
+
+  server.use(webhookRouter.routes()).use(webhookRouter.allowedMethods());
+  // Use webhooks router before using body parser, webhooks don't work with koa-body
+  server.use(koaBody());
 
   const handleRequest = async (ctx) => {
     await handle(ctx.req, ctx.res);
@@ -131,7 +130,7 @@ app.prepare().then(async () => {
   });
 
   router.get("Check billing", "/billing", verifyToken, async (ctx, next) => {
-    ctx.client = handlers.createClient(ctx);
+    ctx.client = createClient(ctx);
     ctx.queryHost = Buffer.from(ctx.query.shop).toString("base64");
     const { billed, initialized } = await shopControl
       .getShop(ctx.shop)
@@ -143,12 +142,10 @@ app.prepare().then(async () => {
       ctx.throw(err);
     });
     if (billingStatus !== "ACTIVE") {
-      const confirmationUrl = await handlers
-        .getSubscriptionUrl(ctx)
-        .catch((err) => {
-          console.log("getSubscriptionUrl", err);
-          ctx.throw(err);
-        });
+      const confirmationUrl = await getSubscriptionUrl(ctx).catch((err) => {
+        console.log("getSubscriptionUrl", err);
+        ctx.throw(err);
+      });
       ctx.body = confirmationUrl;
       return;
     }
@@ -156,7 +153,7 @@ app.prepare().then(async () => {
       await shopControl.updateBillingStatus(ctx.shop, true);
     }
     if (!initialized) {
-      await handlers.initApp(ctx).catch((err) => {
+      await initApp(ctx).catch((err) => {
         console.log({ "initApp ERROR": err });
         ctx.throw(err);
       });
@@ -165,14 +162,14 @@ app.prepare().then(async () => {
     ctx.body = null;
   });
 
-  router.post("/webhooks", async (ctx) => {
-    try {
-      await Shopify.Webhooks.Registry.process(ctx.req, ctx.res);
-      console.log(`Webhook processed, returned status code 200`);
-    } catch (error) {
-      console.log(`Failed to process webhook: ${error}`);
-    }
-  });
+  // router.post("/webhooks", async (ctx) => {
+  //   try {
+  //     await Shopify.Webhooks.Registry.process(ctx.req, ctx.res);
+  //     console.log(`Webhook processed, returned status code 200`);
+  //   } catch (error) {
+  //     console.log(`Failed to process webhook: ${error}`);
+  //   }
+  // });
 
   router.post(
     "/graphql",

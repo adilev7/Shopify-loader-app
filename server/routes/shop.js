@@ -1,7 +1,7 @@
 const Router = require("koa-router");
 const router = new Router({ prefix: "/shop" });
 const shopControl = require("../controllers/shop");
-import { updateApp } from "../handlers/updateApp";
+import { updateApp } from "../handlers";
 import verifyToken from "../middlewares/verifyToken";
 
 /* Shop Schema */

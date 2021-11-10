@@ -1,6 +1,5 @@
 import {
   Page,
-  PageActions,
   Thumbnail,
   SkeletonThumbnail,
   Loading,
@@ -9,7 +8,6 @@ import {
   List,
   Frame,
   DisplayText,
-  Heading,
 } from "@shopify/polaris";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheckCircle } from "@fortawesome/free-solid-svg-icons";
