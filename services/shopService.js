@@ -25,13 +25,6 @@ export const deleteShop = async (shopId) => {
 
 export const getBillingStatus = async (shopId) => {
   const data = await http.get(`${apiUrl}/billing-status?shop=${shopId}`);
-  debugger;
-  return data;
-};
-
-const billingRedirect = async () => {
-  const data = await http.get(`${apiUrl}/billing?shop=${shop}`);
-  debugger;
   return data;
 };
 

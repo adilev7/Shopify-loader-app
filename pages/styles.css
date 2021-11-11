@@ -1,6 +1,17 @@
+.subtitle {
+  width: 20%;
+  margin: 2em 0 0 10%;
+  padding-bottom: 0.5em;
+  font-size: 1.2em;
+  border-bottom: 1px solid #aaa;
+}
 .gifWrap {
   width: 80%;
   margin: 0 auto;
+}
+.dropZoneWrap {
+  width: 80%;
+  margin: 4em auto 0;
 }
 .gifWrapWrap {
   display: flex;
@@ -46,4 +57,20 @@
 .dropZoneWrap .Polaris-DropZone {
   margin-top: 2em;
   margin-bottom: 2em;
+}
+@media only screen and (max-width: 728px) {
+  .Polaris-DisplayText.Polaris-DisplayText--sizeLarge {
+    margin-left: 1em;
+  }
+  .subtitle {
+    width: 60%;
+  }
+  .gifWrapWrap {
+    margin: 2.5em auto;
+    gap: 2.5em;
+  }
+  .gifWrapWrap > * {
+    width: 50%;
+    min-width: initial;
+  }
 }

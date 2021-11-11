@@ -1,23 +1,14 @@
-const shopsCollection = require("../config/db.config").db().collection("shops");
+// const client = require("../config/db.config");
+const { Shops } = require("../schemas/shopSchema");
 const gifControl = require("./gif");
 
-/* Shop Schema */
-//   {
-//       _id: String,
-//      shop: String,
-//      initialized: Boolean,
-//      accessToken: String,
-//      active_gif: String
-//   }
-
 const getAllShops = async () => {
-  const shops = await shopsCollection.find().toArray();
+  const shops = await Shops.find();
   return shops;
 };
 
 const getShop = async (shop) => {
-  const data = await shopsCollection.findOne({ shop });
-
+  const data = await Shops.findOne({ shop });
   return data;
 };
 
@@ -30,14 +21,23 @@ const createShop = async (shop, accessToken) => {
     initialized: false,
     billed: false,
   };
-  const { data } = await shopsCollection.insertOne(shopObj);
-  return data;
+  const newShop = await new Shops(shopObj);
+  newShop.save();
+  return newShop;
 };
 
 const updateActiveGif = async (ctx) => {
   const { shop, active_gif } = ctx.request.body;
   try {
-    await shopsCollection.updateOne({ shop }, { $set: { active_gif } });
+    await Shops.updateOne({ shop }, { $set: { active_gif } });
+  } catch (err) {
+    throw new Error(err);
+  }
+};
+
+const updateAccessToken = async (shop, accessToken) => {
+  try {
+    await Shops.updateOne({ shop }, { $set: { accessToken } });
   } catch (err) {
     throw new Error(err);
   }
@@ -45,7 +45,7 @@ const updateActiveGif = async (ctx) => {
 
 const updateBillingStatus = async (shop, billed) => {
   try {
-    await shopsCollection.updateOne({ shop }, { $set: { billed } });
+    await Shops.updateOne({ shop }, { $set: { billed } });
   } catch (err) {
     throw new Error(err);
   }
@@ -53,7 +53,7 @@ const updateBillingStatus = async (shop, billed) => {
 
 const updateInitStatus = async (shop, initialized) => {
   try {
-    await shopsCollection.updateOne({ shop }, { $set: { initialized } });
+    await Shops.updateOne({ shop }, { $set: { initialized } });
   } catch (err) {
     throw new Error(err);
   }
@@ -61,7 +61,7 @@ const updateInitStatus = async (shop, initialized) => {
 
 const deleteShop = async (shop) => {
   await gifControl.deleteShopGifs(shop);
-  const { data } = await shopsCollection.deleteOne({ shop });
+  const { data } = await Shops.deleteOne({ shop });
   return data;
 };
 
@@ -72,5 +72,6 @@ module.exports = {
   updateActiveGif,
   updateInitStatus,
   updateBillingStatus,
+  updateAccessToken,
   deleteShop,
 };

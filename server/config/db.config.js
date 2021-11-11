@@ -1,4 +1,5 @@
-const { MongoClient } = require("mongodb");
+// const { MongoClient } = require("mongodb");
+const mongoose = require("mongoose");
 require("dotenv").config();
 
 const connectionOptions = {
@@ -9,26 +10,21 @@ const connectionOptions = {
 };
 
 function createURI(options = connectionOptions) {
-  return `mongodb://${options.host}:27017/${options.db}?retryWrites=true&w=majority`;
+  return `mongodb+srv://${options.username}:${options.password}@${options.host}/${options.db}?retryWrites=true&w=majority`;
+  // return `mongodb://${options.host}:27017/${options.db}?retryWrites=true&w=majority`;
   // return `mongodb://${options.username}:${options.password}@${options.host}/${options.db}`;
 }
 
-const client = new MongoClient(createURI(), {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+// const client = new MongoClient(createURI(), {
+//   useNewUrlParser: true,
+//   useUnifiedTopology: true,
+// });
 
-client.connect((err, result) => {
-  if (err) {
-    console.error(err);
-    process.exit(-1);
-  }
+function connect(options = connectionOptions) {
+  return mongoose.connect(createURI(options), {
+    useUnifiedTopology: true,
+    useNewUrlParser: true,
+  });
+}
 
-  console.log("Connected to MongoDB", isConnected());
-});
-
-const isConnected = () => {
-  return !!client && !!client.topology && client.topology.isConnected();
-};
-
-module.exports = client;
+module.exports = connect;

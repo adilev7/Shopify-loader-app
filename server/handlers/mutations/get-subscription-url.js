@@ -9,13 +9,14 @@ export function RECURRING_CREATE(url) {
           returnUrl: "${url}"
           test: true
           lineItems: [
-          {
-            plan: {
-              appUsagePricingDetails: {
-                  cappedAmount: { amount: 3, currencyCode: USD }
-              }
-            }
-          }
+         # {
+         #   plan: {
+         #     appUsagePricingDetails: {
+         #         cappedAmount: { amount: 3, currencyCode: USD }
+         #         terms: ""
+         #     }
+         #   }
+         # }
           {
             plan: {
               appRecurringPricingDetails: {
@@ -39,14 +40,20 @@ export function RECURRING_CREATE(url) {
 
 export const getSubscriptionUrl = async (ctx) => {
   const { client, shop, queryHost: host } = ctx;
-  const confirmationUrl = await client
-    .mutate({
-      // mutation: RECURRING_CREATE(process.env.HOST),
-      mutation: RECURRING_CREATE(
-        `${process.env.HOST}?shop=${shop}&host=${host}`
-      ),
-    })
-    .then((response) => response.data.appSubscriptionCreate.confirmationUrl);
+  try {
+    const confirmationUrl = await client
+      .mutate({
+        // mutation: RECURRING_CREATE(process.env.HOST),
+        mutation: RECURRING_CREATE(
+          `${process.env.HOST}?shop=${shop}&host=${host}`
+        ),
+      })
+      .then((response) => {
+        return response.data.appSubscriptionCreate.confirmationUrl;
+      });
+    return confirmationUrl;
+  } catch (err) {
+    console.error(err);
+  }
   // ctx.set("Access-Control-Allow-Origin", "*");
-  return confirmationUrl;
 };
