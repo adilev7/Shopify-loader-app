@@ -5,7 +5,7 @@ import next from "next";
 import Router from "koa-router";
 import createShopifyAuth, { verifyRequest } from "@shopify/koa-shopify-auth";
 import dotenv from "dotenv";
-
+console.log("test");
 const koaBody = require("koa-body");
 const json = require("koa-json");
 const cors = require("koa-cors");
